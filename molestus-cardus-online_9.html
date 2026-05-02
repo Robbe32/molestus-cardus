@@ -1,0 +1,2012 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Molestus Cardus – Card Forge + Online Top Trumps</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<style>
+:root {
+  --gold: #d4a843;
+  --gold2: #f0cc6e;
+  --gold3: #8a6820;
+  --bg: #0a0805;
+  --panel: #110e07;
+  --panel2: #1a1508;
+  --border: #2e2510;
+  --text: #e0d4a8;
+  --dim: #6e6040;
+  --el-normal: #8a7a5a;
+  --el-feuer: #c0392b;
+  --el-eis: #2980b9;
+  --el-elektro: #f39c12;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'EB Garamond', serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+/* ── HEADER ── */
+header {
+  text-align: center;
+  padding: 16px 20px 12px;
+  background: linear-gradient(180deg, #1c1508 0%, var(--bg) 100%);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+
+.triforce-icon {
+  font-size: 28px;
+  line-height: 1;
+  display: block;
+  margin-bottom: 3px;
+  filter: drop-shadow(0 0 12px rgba(212,168,67,0.6));
+}
+
+header h1 {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: clamp(13px, 3.2vw, 22px);
+  font-weight: 900;
+  color: var(--gold);
+  letter-spacing: 3px;
+  text-shadow: 0 0 30px rgba(212,168,67,0.5);
+}
+
+header p {
+  font-size: 10px;
+  color: var(--dim);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* ── MODE SWITCHER ── */
+.mode-switch {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  padding: 12px 0 0;
+}
+
+.mode-btn {
+  padding: 8px 18px;
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  color: var(--dim);
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.2s;
+}
+
+.mode-btn:hover { border-color: var(--gold3); color: var(--text); }
+.mode-btn.active { background: var(--gold3); border-color: var(--gold); color: #0a0805; }
+
+/* ── DESIGNER MODE ── */
+.workspace {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.editor {
+  width: 320px;
+  min-width: 280px;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sec {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 14px;
+}
+
+.sec:last-child { border-bottom: none; }
+
+.sec-title {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--gold3);
+  margin-bottom: 10px;
+}
+
+label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--dim);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+input[type=text], input[type=number], textarea, select {
+  width: 100%;
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'EB Garamond', serif;
+  font-size: 14px;
+  padding: 7px 10px;
+  border-radius: 2px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+input:focus, textarea:focus, select:focus { border-color: var(--gold3); }
+select option { background: var(--panel2); }
+textarea { resize: vertical; min-height: 65px; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+
+.toggle-row {
+  display: flex; gap: 10px; align-items: center;
+  margin-top: 6px;
+}
+
+.toggle-label {
+  display: flex; align-items: center; gap: 8px;
+  cursor: pointer; font-size: 13px; color: var(--text);
+  user-select: none;
+}
+
+.toggle-label input { display: none; }
+
+.toggle-box {
+  width: 36px; height: 20px;
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  position: relative;
+  transition: background 0.2s;
+}
+
+.toggle-box::after {
+  content: '';
+  position: absolute;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--dim);
+  top: 2px; left: 2px;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.toggle-label input:checked + .toggle-box { background: rgba(212,168,67,0.15); border-color: var(--gold3); }
+.toggle-label input:checked + .toggle-box::after { transform: translateX(16px); background: var(--gold); }
+
+.mob-search {
+  position: relative;
+}
+
+.mob-search input {
+  padding-left: 28px;
+}
+
+.mob-search::before {
+  content: '🔍';
+  position: absolute;
+  left: 8px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.mob-dropdown {
+  position: absolute;
+  top: 100%; left: 0; right: 0;
+  background: var(--panel2);
+  border: 1px solid var(--gold3);
+  border-top: none;
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 100;
+  display: none;
+  border-radius: 0 0 4px 4px;
+}
+
+.mob-dropdown.open { display: block; }
+
+.mob-item {
+  padding: 7px 10px;
+  cursor: pointer;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px;
+  transition: background 0.15s;
+}
+
+.mob-item:hover { background: rgba(212,168,67,0.08); }
+
+.mob-item-name { font-weight: 600; }
+
+.mob-item-tags {
+  display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end;
+}
+
+.mini-tag {
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 10px;
+  letter-spacing: 0.5px;
+  font-family: 'Cinzel', serif;
+  text-transform: uppercase;
+}
+
+.rarity-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+}
+
+.r-btn {
+  padding: 6px 2px;
+  border: 1px solid var(--border);
+  background: var(--panel2);
+  color: var(--dim);
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  border-radius: 2px;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.r-btn[data-r="bronze"].active  { background:#2a1a0a; border-color:#8b5e2a; color:#cd8b4a; }
+.r-btn[data-r="silber"].active  { background:#1a1e22; border-color:#6a8a9a; color:#aaccdd; }
+.r-btn[data-r="gold"].active    { background:#1e1800; border-color:var(--gold); color:var(--gold2); }
+.r-btn[data-r="legendaer"].active { background:#1e0a1e; border-color:#9a3a9a; color:#d46ad4; }
+
+.stat-box {
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 8px;
+  text-align: center;
+}
+
+.stat-box label { margin-bottom: 2px; font-size: 9px; }
+
+.stat-box input {
+  text-align: center;
+  font-family: 'Cinzel', serif;
+  font-size: 18px;
+  font-weight: 700;
+  padding: 2px;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  width: 100%;
+}
+
+.art-drop {
+  width: 100%; height: 100px;
+  background: var(--panel2);
+  border: 1px dashed var(--border);
+  border-radius: 2px;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 4px;
+  cursor: pointer; color: var(--dim); font-size: 12px;
+  position: relative; overflow: hidden;
+  transition: border-color 0.2s;
+}
+.art-drop:hover { border-color: var(--gold3); }
+.art-drop img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+#art-file { display: none; }
+
+.save-btn {
+  width: 100%; padding: 11px;
+  background: linear-gradient(135deg, var(--gold3), var(--gold));
+  border: none; color: #0a0805;
+  font-family: 'Cinzel', serif;
+  font-size: 12px; font-weight: 700;
+  letter-spacing: 3px; text-transform: uppercase;
+  cursor: pointer; border-radius: 2px;
+  transition: opacity 0.2s;
+}
+.save-btn:hover { opacity: 0.85; }
+
+.preview-area {
+  flex: 1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 30px 20px;
+  background: radial-gradient(ellipse at center, #1a1508 0%, var(--bg) 65%);
+  position: relative;
+  overflow: hidden;
+}
+
+.preview-area::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: radial-gradient(circle, rgba(212,168,67,0.025) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+}
+
+.preview-lbl {
+  font-family: 'Cinzel', serif;
+  font-size: 9px; letter-spacing: 4px;
+  color: var(--dim); text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+/* ═══════════════════════════
+   CARD COMPONENT
+═══════════════════════════ */
+.card {
+  width: 230px; height: 345px;
+  position: relative;
+  filter: drop-shadow(0 16px 40px rgba(0,0,0,0.9));
+  transition: transform 0.3s;
+}
+
+.card:hover { transform: translateY(-5px) rotate(0.8deg); }
+
+.card-bg {
+  position: absolute; inset: 0;
+  border-radius: 8px;
+  border: 2px solid var(--gold3);
+  overflow: hidden;
+}
+
+.card[data-r="bronze"]  .card-bg { background: linear-gradient(165deg,#1e0e04,#0e0804); border-color:#8b5e2a; }
+.card[data-r="silber"]  .card-bg { background: linear-gradient(165deg,#0e1218,#060a0e); border-color:#5a7a8a; }
+.card[data-r="gold"]    .card-bg { background: linear-gradient(165deg,#1e1600,#0a0800); border-color:var(--gold); }
+.card[data-r="legendaer"] .card-bg { background: linear-gradient(165deg,#180818,#0a040a); border-color:#8a2a8a; }
+
+.corner { position: absolute; width: 22px; height: 22px; z-index: 5; }
+.corner.tl { top:5px; left:5px; border-top:1px solid; border-left:1px solid; }
+.corner.tr { top:5px; right:5px; border-top:1px solid; border-right:1px solid; }
+.corner.bl { bottom:5px; left:5px; border-bottom:1px solid; border-left:1px solid; }
+.corner.br { bottom:5px; right:5px; border-bottom:1px solid; border-right:1px solid; }
+
+.card[data-r="bronze"]  .corner { border-color: #cd8b4a; }
+.card[data-r="silber"]  .corner { border-color: #aaccdd; }
+.card[data-r="gold"]    .corner { border-color: var(--gold2); }
+.card[data-r="legendaer"] .corner { border-color: #d46ad4; }
+
+.card-badges {
+  position: absolute; top:9px; right:9px;
+  display:flex; gap:3px; z-index:10;
+}
+
+.badge {
+  width:22px; height:22px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px;
+  background: rgba(0,0,0,0.6);
+  border:1px solid rgba(255,255,255,0.15);
+}
+
+.card-art {
+  position: absolute;
+  top:40px; left:8px; right:8px; height:118px;
+  border-radius:3px; overflow:hidden;
+}
+
+.card-art-inner {
+  width:100%; height:100%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:48px;
+}
+
+.card-art img { width:100%; height:100%; object-fit:cover; }
+
+.card-rarity-line {
+  position: absolute; top:162px; left:0; right:0; height:2px; z-index:6;
+}
+
+.card[data-r="bronze"]   .card-rarity-line { background: linear-gradient(90deg,transparent,#cd8b4a,transparent); }
+.card[data-r="silber"]   .card-rarity-line { background: linear-gradient(90deg,transparent,#aaccdd,transparent); }
+.card[data-r="gold"]     .card-rarity-line { background: linear-gradient(90deg,transparent,var(--gold2),transparent); }
+.card[data-r="legendaer"].card-rarity-line { background: linear-gradient(90deg,transparent,#d46ad4,transparent); }
+
+.card-namebox {
+  position: absolute;
+  top:165px; left:7px; right:7px;
+  background: rgba(0,0,0,0.72);
+  border-radius:2px; padding:4px 7px; text-align:center;
+}
+
+.card-name {
+  font-family:'Cinzel',serif; font-size:11.5px; font-weight:700;
+  color:#fff; letter-spacing:0.5px; line-height:1.2;
+}
+
+.card-sub {
+  font-size:9px; letter-spacing:2px; text-transform:uppercase;
+  margin-top:2px;
+}
+
+.card-tags {
+  position: absolute;
+  top:208px; left:7px; right:7px;
+  display:flex; gap:4px; justify-content:center;
+}
+
+.card-tag {
+  font-family:'Cinzel',serif; font-size:8px;
+  letter-spacing:1px; text-transform:uppercase;
+  padding:2px 6px; border-radius:10px;
+  border:1px solid;
+}
+
+.card-stats {
+  position: absolute;
+  top:228px; left:7px; right:7px;
+  display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:4px;
+}
+
+.card-stat {
+  background:rgba(0,0,0,0.55);
+  border-radius:2px; padding:3px 2px; text-align:center;
+}
+
+.cs-lbl {
+  font-size:7px; letter-spacing:1px; text-transform:uppercase; color:var(--dim);
+}
+
+.cs-val {
+  font-family:'Cinzel',serif; font-size:13px; font-weight:700; color:#fff;
+  line-height:1.2;
+}
+
+.card-textbox {
+  position: absolute;
+  top:272px; left:7px; right:7px; bottom:24px;
+  background:rgba(0,0,0,0.5); border-radius:2px;
+  padding:5px 7px; overflow:hidden;
+}
+
+.card-effect {
+  font-size:9.5px; color:#ccc; line-height:1.4; font-style:italic;
+}
+
+.card-footer {
+  position: absolute;
+  bottom:6px; left:7px; right:7px;
+  display:flex; justify-content:space-between; align-items:center;
+}
+
+.card-gem {
+  width:10px; height:10px; border-radius:50%;
+  border:1px solid rgba(255,255,255,0.2);
+}
+
+.card[data-r="bronze"]   .card-gem { background:#cd8b4a; }
+.card[data-r="silber"]   .card-gem { background:#aaccdd; }
+.card[data-r="gold"]     .card-gem { background:var(--gold2); box-shadow:0 0 5px var(--gold); }
+.card[data-r="legendaer"].card-gem { background:#d46ad4; box-shadow:0 0 5px #d46ad4; }
+
+.card-setname {
+  font-family:'Cinzel',serif; font-size:7px;
+  color:var(--dim); letter-spacing:1px;
+}
+
+.card-glow {
+  position:absolute; inset:0; border-radius:6px;
+  pointer-events:none; z-index:2; opacity:0;
+}
+.card[data-r="legendaer"] .card-glow {
+  background: radial-gradient(ellipse at 50% 50%, rgba(180,50,180,0.12), transparent 65%);
+  opacity:1;
+}
+.card[data-r="gold"] .card-glow {
+  background: radial-gradient(ellipse at 50% 50%, rgba(212,168,67,0.08), transparent 65%);
+  opacity:1;
+}
+
+/* ── GALLERY ── */
+.gallery {
+  width: 260px; min-width:220px;
+  background:var(--panel);
+  border-left:1px solid var(--border);
+  display:flex; flex-direction:column;
+}
+
+.gallery-head {
+  padding:12px 14px 8px;
+  border-bottom:1px solid var(--border);
+  display:flex; justify-content:space-between; align-items:center;
+}
+
+.gallery-head span {
+  font-family:'Cinzel',serif; font-size:10px;
+  letter-spacing:3px; color:var(--gold3); text-transform:uppercase;
+}
+
+.gallery-cnt { font-size:11px; color:var(--dim); }
+
+.gallery-grid {
+  flex:1; overflow-y:auto; padding:10px;
+  display:grid; grid-template-columns:1fr 1fr; gap:8px;
+  align-content:start;
+}
+
+.g-card {
+  cursor:pointer; position:relative;
+  transition:transform 0.2s;
+}
+.g-card:hover { transform:scale(1.05); }
+
+.g-mini {
+  width:100%; aspect-ratio:2/3;
+  border-radius:4px; overflow:hidden;
+  position:relative; border:1px solid var(--border);
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  gap:3px; padding:5px;
+}
+
+.g-mini-name {
+  font-family:'Cinzel',serif; font-size:8px;
+  color:#fff; text-align:center;
+  letter-spacing:0.5px; line-height:1.3;
+  word-break:break-word;
+  z-index:2; position:relative;
+}
+
+.g-mini-icon { font-size:24px; z-index:2; position:relative; }
+
+.g-del {
+  position:absolute; top:3px; right:3px;
+  width:16px; height:16px; border-radius:50%;
+  background:rgba(140,30,30,0.9);
+  border:none; cursor:pointer;
+  font-size:9px; color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; transition:opacity 0.2s; z-index:10;
+}
+
+.g-card:hover .g-del { opacity:1; }
+
+.gallery-empty {
+  grid-column:span 2; text-align:center;
+  color:var(--dim); font-size:12px; font-style:italic;
+  padding:24px 8px;
+}
+
+.export-btn {
+  margin:10px; padding:9px;
+  background:transparent; border:1px solid var(--border);
+  color:var(--gold3); font-family:'Cinzel',serif;
+  font-size:10px; letter-spacing:2px; cursor:pointer;
+  border-radius:2px; transition:all 0.2s;
+}
+.export-btn:hover { border-color:var(--gold3); color:var(--gold); }
+
+/* ═══════════════════════════
+   GAME MODE
+═══════════════════════════ */
+.game-container {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+  padding: 20px;
+  background: radial-gradient(ellipse at center, #1a1508 0%, var(--bg) 65%);
+  position: relative;
+  overflow-y: auto;
+}
+
+.game-container.active { display: flex; }
+
+/* Connection Screen */
+.connect-screen {
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 30px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.connect-screen h2 {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 24px;
+  color: var(--gold);
+  margin-bottom: 20px;
+}
+
+.connect-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin: 30px 0;
+}
+
+.connect-box {
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 24px;
+}
+
+.connect-box h3 {
+  font-family: 'Cinzel', serif;
+  font-size: 16px;
+  color: var(--gold2);
+  margin-bottom: 16px;
+}
+
+.connect-box p {
+  font-size: 13px;
+  color: var(--dim);
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+
+.big-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--gold3), var(--gold));
+  border: none;
+  color: #0a0805;
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: opacity 0.2s;
+}
+
+.big-btn:hover { opacity: 0.85; }
+
+.big-btn.secondary {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--gold);
+}
+
+.big-btn.secondary:hover { border-color: var(--gold); }
+
+.room-code-display {
+  margin: 20px 0;
+  padding: 16px;
+  background: var(--panel2);
+  border: 2px solid var(--gold);
+  border-radius: 6px;
+}
+
+.room-code-display .label {
+  font-size: 11px;
+  color: var(--dim);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.room-code-display .code {
+  font-family: 'Cinzel', serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gold2);
+  letter-spacing: 1px;
+  word-break: break-all;
+  padding: 8px;
+}
+
+.status-msg {
+  margin-top: 20px;
+  padding: 12px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.status-msg.waiting {
+  background: rgba(243,156,18,0.1);
+  border: 1px solid rgba(243,156,18,0.3);
+  color: #f39c12;
+}
+
+.status-msg.connected {
+  background: rgba(39,174,96,0.1);
+  border: 1px solid rgba(39,174,96,0.3);
+  color: #27ae60;
+}
+
+.status-msg.error {
+  background: rgba(192,57,43,0.1);
+  border: 1px solid rgba(192,57,43,0.3);
+  color: #c0392b;
+}
+
+#join-input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 16px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-align: center;
+  border-radius: 4px;
+}
+
+/* Game Board */
+.game-board {
+  display: none;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.game-board.active { display: flex; }
+
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.player-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.player-name {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  color: var(--gold);
+}
+
+.player-cards {
+  font-size: 12px;
+  color: var(--dim);
+}
+
+.turn-indicator {
+  padding: 8px 16px;
+  background: var(--gold3);
+  color: #0a0805;
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 2px;
+  border-radius: 20px;
+}
+
+.battle-area {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 30px;
+  align-items: center;
+  padding: 30px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  min-height: 440px;
+}
+
+.player-card-slot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 360px;
+}
+
+.vs-divider {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 48px;
+  color: var(--gold);
+  text-shadow: 0 0 20px rgba(212,168,67,0.5);
+}
+
+.stat-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.stat-selector h3 {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  color: var(--gold);
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.stat-btn {
+  padding: 12px 16px;
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stat-btn:hover {
+  border-color: var(--gold);
+  background: rgba(212,168,67,0.1);
+}
+
+.stat-btn .stat-name { font-weight: 600; }
+.stat-btn .stat-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gold2);
+}
+
+.result-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.result-overlay.active { display: flex; }
+
+.result-box {
+  background: var(--panel);
+  border: 2px solid var(--gold);
+  border-radius: 8px;
+  padding: 40px;
+  text-align: center;
+  max-width: 500px;
+}
+
+.result-box h2 {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 36px;
+  color: var(--gold2);
+  margin-bottom: 20px;
+}
+
+.result-box p {
+  font-size: 16px;
+  color: var(--text);
+  margin-bottom: 30px;
+}
+
+.game-over-screen {
+  display: none;
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.game-over-screen.active { display: block; }
+
+.game-over-screen h2 {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 48px;
+  color: var(--gold2);
+  margin-bottom: 20px;
+  text-shadow: 0 0 30px rgba(212,168,67,0.6);
+}
+
+.game-over-screen p {
+  font-size: 18px;
+  color: var(--text);
+  margin-bottom: 40px;
+}
+
+/* RESPONSIVE */
+::-webkit-scrollbar { width:5px; }
+::-webkit-scrollbar-track { background:var(--panel); }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+@media(max-width:960px) {
+  .gallery { display:none; }
+  .connect-options { grid-template-columns: 1fr; }
+  .battle-area { grid-template-columns: 1fr; }
+  .vs-divider { display: none; }
+}
+
+@media(max-width:640px) {
+  .workspace { flex-direction:column; }
+  .editor { width:100%; border-right:none; }
+  .card { width:200px; height:300px; }
+}
+
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="triforce-icon">△</span>
+  <h1>MOLESTUS CARDUS</h1>
+  <p>Card Forge · Online Top Trumps</p>
+  <div class="mode-switch">
+    <button class="mode-btn active" onclick="switchMode('designer')">🎨 Designer</button>
+    <button class="mode-btn" onclick="switchMode('game')">⚔️ Spielen</button>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════
+     DESIGNER MODE
+══════════════════════════════════════════ -->
+<div class="workspace" id="designer-mode">
+
+<div class="editor">
+  <div class="sec">
+    <div class="sec-title">Mob auswählen</div>
+    <div class="mob-search">
+      <input type="text" id="mob-search" placeholder="Mob suchen..." oninput="filterMobs(this.value)" autocomplete="off">
+      <div class="mob-dropdown" id="mob-dropdown"></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">Karteninfo</div>
+    <label>Name</label>
+    <input type="text" id="f-name" placeholder="z.B. Roter Bokblin" oninput="sync()">
+    <div style="height:8px"></div>
+    <div class="two-col">
+      <div>
+        <label>Familie</label>
+        <input type="text" id="f-familie" placeholder="z.B. Bokblin-Familie" oninput="sync()">
+      </div>
+      <div>
+        <label>Element</label>
+        <select id="f-element" onchange="sync()">
+          <option value="normal">Normal</option>
+          <option value="feuer">Feuer</option>
+          <option value="eis">Eis</option>
+          <option value="elektro">Elektro</option>
+        </select>
+      </div>
+    </div>
+    <div style="height:8px"></div>
+    <label>Klasse</label>
+    <select id="f-klasse" onchange="sync()">
+      <option value="Bestie">Bestie</option>
+      <option value="Magier">Magier</option>
+      <option value="Antik">Antik</option>
+      <option value="Untot">Untot</option>
+      <option value="Dämon">Dämon</option>
+      <option value="Drache">Drache</option>
+      <option value="Naturwesen">Naturwesen</option>
+    </select>
+    <div class="toggle-row" style="margin-top:10px">
+      <label class="toggle-label">
+        <input type="checkbox" id="f-miasma" onchange="sync()">
+        <div class="toggle-box"></div>
+        ☠ Miasma
+      </label>
+      <label class="toggle-label">
+        <input type="checkbox" id="f-flug" onchange="sync()">
+        <div class="toggle-box"></div>
+        🦅 Flug
+      </label>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">Seltenheit</div>
+    <div class="rarity-grid">
+      <button class="r-btn active" data-r="bronze"   onclick="setR(this)">Bronze</button>
+      <button class="r-btn"        data-r="silber"   onclick="setR(this)">Silber</button>
+      <button class="r-btn"        data-r="gold"     onclick="setR(this)">Gold</button>
+      <button class="r-btn"        data-r="legendaer" onclick="setR(this)">Legendär</button>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">Stats (Top Trumps)</div>
+    <div class="three-col">
+      <div class="stat-box">
+        <label>Stärke</label>
+        <input type="number" id="s-staerke" min="0" max="99" value="45" oninput="sync()">
+      </div>
+      <div class="stat-box">
+        <label>Verteidigung</label>
+        <input type="number" id="s-verteidigung" min="0" max="99" value="30" oninput="sync()">
+      </div>
+      <div class="stat-box">
+        <label>Geschwindigkeit</label>
+        <input type="number" id="s-geschw" min="0" max="99" value="55" oninput="sync()">
+      </div>
+      <div class="stat-box">
+        <label>Intelligenz</label>
+        <input type="number" id="s-intel" min="0" max="99" value="20" oninput="sync()">
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">Beschreibung</div>
+    <textarea id="f-text" placeholder="Flavor text..." oninput="sync()"></textarea>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">Artwork</div>
+    <div class="art-drop" onclick="document.getElementById('art-file').click()">
+      <img id="art-prev" style="display:none">
+      <span id="art-hint">🖼 Bild hochladen</span>
+      <span style="font-size:10px;color:var(--dim)">PNG · JPG</span>
+    </div>
+    <input type="file" id="art-file" accept="image/*" onchange="loadArt(event)">
+  </div>
+
+  <button class="save-btn" onclick="saveCard()">✦ KARTE SPEICHERN ✦</button>
+</div>
+
+<div class="preview-area">
+  <div class="preview-lbl">Vorschau</div>
+  <div class="card" id="the-card" data-r="bronze">
+    <div class="card-bg"></div>
+    <div class="card-glow"></div>
+    <div class="corner tl"></div>
+    <div class="corner tr"></div>
+    <div class="corner bl"></div>
+    <div class="corner br"></div>
+    <div class="card-badges" id="p-badges"></div>
+    <div class="card-art">
+      <div class="card-art-inner" id="p-art">🐗</div>
+    </div>
+    <div class="card-rarity-line"></div>
+    <div class="card-namebox">
+      <div class="card-name" id="p-name">Roter Bokblin</div>
+      <div class="card-sub" id="p-sub" style="color:#cd8b4a">Bokblin-Familie</div>
+    </div>
+    <div class="card-tags" id="p-tags"></div>
+    <div class="card-stats">
+      <div class="card-stat"><div class="cs-lbl">Stärke</div><div class="cs-val" id="p-staerke">45</div></div>
+      <div class="card-stat"><div class="cs-lbl">Verteid.</div><div class="cs-val" id="p-verteid">30</div></div>
+      <div class="card-stat"><div class="cs-lbl">Geschw.</div><div class="cs-val" id="p-geschw">55</div></div>
+      <div class="card-stat"><div class="cs-lbl">Intel.</div><div class="cs-val" id="p-intel">20</div></div>
+    </div>
+    <div class="card-textbox">
+      <div class="card-effect" id="p-text">Ein furchterregender Goblin.</div>
+    </div>
+    <div class="card-footer">
+      <div class="card-gem"></div>
+      <div class="card-setname">MOLESTUS CARDUS · I</div>
+      <div class="card-gem"></div>
+    </div>
+  </div>
+</div>
+
+<div class="gallery">
+  <div class="gallery-head">
+    <span>Mein Deck</span>
+    <span class="gallery-cnt" id="g-cnt">0 Karten</span>
+  </div>
+  <div class="gallery-grid" id="g-grid">
+    <div class="gallery-empty">Noch keine Karten.<br>Speichere deine erste!</div>
+  </div>
+  <button class="export-btn" onclick="generateRandomDeck()">🎲 Zufalls-Deck (20 Karten)</button>
+  <button class="export-btn" onclick="exportDeck()">⬇ JSON exportieren</button>
+</div>
+
+</div>
+
+<!-- ══════════════════════════════════════════
+     GAME MODE
+══════════════════════════════════════════ -->
+<div class="game-container" id="game-mode">
+  
+  <!-- Connection Screen -->
+  <div class="connect-screen" id="connect-screen">
+    <h2>⚔️ Online Top Trumps</h2>
+    
+    <div class="connect-options">
+      <div class="connect-box">
+        <h3>🏰 Spiel hosten</h3>
+        <p>Erstelle einen Raum und teile den Code mit deinem Freund.</p>
+        <button class="big-btn" onclick="hostGame()">Raum erstellen</button>
+      </div>
+      
+      <div class="connect-box">
+        <h3>⚔️ Beitreten</h3>
+        <p>Gib den Raum-Code ein, um einem Spiel beizutreten.</p>
+        <input type="text" id="join-input" placeholder="Peer-ID eingeben">
+        <button class="big-btn" onclick="joinGame()">Beitreten</button>
+      </div>
+    </div>
+
+    <div id="room-code-box" class="hidden">
+      <div class="room-code-display">
+        <div class="label">Dein Raum-Code:</div>
+        <div class="code" id="room-code">----</div>
+        <button class="big-btn secondary" style="margin-top:12px" onclick="copyRoomCode()">📋 Code kopieren</button>
+      </div>
+      <p style="color:var(--dim);font-size:13px;">Teile diesen Code mit deinem Mitspieler!</p>
+    </div>
+
+    <div id="status-msg"></div>
+  </div>
+
+  <!-- Game Board -->
+  <div class="game-board" id="game-board">
+    <div class="game-header">
+      <div class="player-info">
+        <div class="player-name" id="p1-name">Du</div>
+        <div class="player-cards" id="p1-count">0 Karten</div>
+      </div>
+      <div class="turn-indicator" id="turn-indicator">Warte...</div>
+      <div class="player-info" style="text-align:right">
+        <div class="player-name" id="p2-name">Gegner</div>
+        <div class="player-cards" id="p2-count">0 Karten</div>
+      </div>
+    </div>
+
+    <div class="battle-area">
+      <div class="player-card-slot" id="p1-card-slot"></div>
+      <div class="vs-divider">VS</div>
+      <div class="player-card-slot" id="p2-card-slot"></div>
+    </div>
+
+    <div class="stat-selector" id="stat-selector" style="display:none">
+      <h3>Wähle einen Stat:</h3>
+      <button class="stat-btn" onclick="selectStat('staerke')">
+        <span class="stat-name">⚔️ Stärke</span>
+        <span class="stat-value" id="sel-staerke">0</span>
+      </button>
+      <button class="stat-btn" onclick="selectStat('verteidigung')">
+        <span class="stat-name">🛡️ Verteidigung</span>
+        <span class="stat-value" id="sel-verteid">0</span>
+      </button>
+      <button class="stat-btn" onclick="selectStat('geschw')">
+        <span class="stat-name">⚡ Geschwindigkeit</span>
+        <span class="stat-value" id="sel-geschw">0</span>
+      </button>
+      <button class="stat-btn" onclick="selectStat('intel')">
+        <span class="stat-name">🧠 Intelligenz</span>
+        <span class="stat-value" id="sel-intel">0</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Result Overlay -->
+  <div class="result-overlay" id="result-overlay">
+    <div class="result-box">
+      <h2 id="result-title">Du gewinnst!</h2>
+      <p id="result-text"></p>
+      <button class="big-btn" onclick="nextRound()">Weiter</button>
+    </div>
+  </div>
+
+  <!-- Game Over -->
+  <div class="game-over-screen" id="game-over">
+    <h2 id="winner-text">🏆 Du hast gewonnen!</h2>
+    <p>Das Spiel ist vorbei.</p>
+    <button class="big-btn" onclick="location.reload()">Neues Spiel</button>
+  </div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// MOBS DATA (from PDF)
+// ══════════════════════════════════════════════════════════════
+const MOBS = [
+  {n:"Roter Bokblin",fam:"Bokblin-Familie",kl:"Bestie",el:"normal",miasma:true,flug:false,icon:"🗡️"},
+  {n:"Schwarzer Bokblin",fam:"Bokblin-Familie",kl:"Bestie",el:"normal",miasma:true,flug:false,icon:"🗡️"},
+  {n:"Silberner Bokblin",fam:"Bokblin-Familie",kl:"Bestie",el:"normal",miasma:true,flug:false,icon:"🗡️"},
+  {n:"Blauer Bokblin",fam:"Bokblin-Familie",kl:"Bestie",el:"normal",miasma:true,flug:false,icon:"🗡️"},
+  {n:"Goldener Bokblin",fam:"Bokblin-Familie",kl:"Bestie",el:"normal",miasma:false,flug:false,icon:"🗡️"},
+  {n:"Stalbokblin",fam:"Bokblin-Familie",kl:"Untot",el:"normal",miasma:true,flug:false,icon:"💀"},
+  {n:"Roter Bossbok",fam:"Bossbok-Familie",kl:"Bestie",el:"normal",miasma:true,flug:false,icon:"🐗"},
+  {n:"Blauer Bossbok",fam:"Bossbok-Familie",kl:"Bestie",el:"normal",miasma:true,flug:false,icon:"🐗"},
+  {n:"Schwarzer Bossbok",fam:"Bossbok-Familie",kl:"Bestie",el:"normal",miasma:true,flug:false,icon:"🐗"},
+  {n:"Silberner Bossbok",fam:"Bossbok-Familie",kl:"Bestie",el:"normal",miasma:true,flug:false,icon:"🐗"},
+  {n:"Roter Moblin",fam:"Moblin-Familie",kl:"Bestie",el:"normal",miasma:true,flug:false,icon:"🪓"},
+  {n:"Blauer Moblin",fam:"Moblin-Familie",kl:"Bestie",el:"normal",miasma:true,flug:false,icon:"🪓"},
+  {n:"Schwarzer Moblin",fam:"Moblin-Familie",kl:"Bestie",el:"normal",miasma:true,flug:false,icon:"🪓"},
+  {n:"Silberner Moblin",fam:"Moblin-Familie",kl:"Bestie",el:"normal",miasma:true,flug:false,icon:"🪓"},
+  {n:"Goldener Moblin",fam:"Moblin-Familie",kl:"Bestie",el:"normal",miasma:false,flug:false,icon:"🪓"},
+  {n:"Stalmoblin",fam:"Moblin-Familie",kl:"Untot",el:"normal",miasma:true,flug:false,icon:"💀"},
+  {n:"Roter Horrorblin",fam:"Horrorblin-Familie",kl:"Bestie",el:"normal",miasma:true,flug:false,icon:"👹"},
+  {n:"Blauer Horrorblin",fam:"Horrorblin-Familie",kl:"Bestie",el:"normal",miasma:true,flug:false,icon:"👹"},
+  {n:"Schwarzer Horrorblin",fam:"Horrorblin-Familie",kl:"Bestie",el:"normal",miasma:true,flug:false,icon:"👹"},
+  {n:"Silberner Horrorblin",fam:"Horrorblin-Familie",kl:"Bestie",el:"normal",miasma:true,flug:false,icon:"👹"},
+  {n:"Grüner Echsalfos",fam:"Echsalfos-Familie",kl:"Bestie",el:"normal",miasma:true,flug:false,icon:"🦎"},
+  {n:"Blauer Echsalfos",fam:"Echsalfos-Familie",kl:"Bestie",el:"normal",miasma:true,flug:false,icon:"🦎"},
+  {n:"Schwarzer Echsalfos",fam:"Echsalfos-Familie",kl:"Bestie",el:"normal",miasma:true,flug:false,icon:"🦎"},
+  {n:"Silberner Echsalfos",fam:"Echsalfos-Familie",kl:"Bestie",el:"normal",miasma:true,flug:false,icon:"🦎"},
+  {n:"Goldener Echsalfos",fam:"Echsalfos-Familie",kl:"Bestie",el:"normal",miasma:false,flug:false,icon:"🦎"},
+  {n:"Eis-Echsalfos",fam:"Echsalfos-Familie",kl:"Bestie",el:"eis",miasma:true,flug:false,icon:"🧊"},
+  {n:"Feuer-Echsalfos",fam:"Echsalfos-Familie",kl:"Bestie",el:"feuer",miasma:true,flug:false,icon:"🔥"},
+  {n:"Elektro-Echsalfos",fam:"Echsalfos-Familie",kl:"Bestie",el:"elektro",miasma:true,flug:false,icon:"⚡"},
+  {n:"Stalechsalfos",fam:"Echsalfos-Familie",kl:"Untot",el:"normal",miasma:true,flug:false,icon:"💀"},
+  {n:"Roter Leune",fam:"Leune",kl:"Bestie",el:"normal",miasma:true,flug:false,icon:"🦁"},
+  {n:"Blauer Leune",fam:"Leune",kl:"Bestie",el:"normal",miasma:true,flug:false,icon:"🦁"},
+  {n:"Weißer Leune",fam:"Leune",kl:"Bestie",el:"normal",miasma:true,flug:false,icon:"🦁"},
+  {n:"Silberner Leune",fam:"Leune",kl:"Bestie",el:"normal",miasma:true,flug:false,icon:"🦁"},
+  {n:"Goldener Leune",fam:"Leune",kl:"Bestie",el:"normal",miasma:false,flug:false,icon:"🦁"},
+  {n:"Schwarzer Hinox",fam:"Hinox-Familie",kl:"Bestie",el:"normal",miasma:true,flug:false,icon:"👁️"},
+  {n:"Stalhinox",fam:"Hinox-Familie",kl:"Untot",el:"normal",miasma:true,flug:false,icon:"💀"},
+  {n:"Roter Hinox",fam:"Hinox-Familie",kl:"Bestie",el:"normal",miasma:true,flug:false,icon:"👁️"},
+  {n:"Blauer Hinox",fam:"Hinox-Familie",kl:"Bestie",el:"normal",miasma:true,flug:false,icon:"👁️"},
+  {n:"Feuer-Pyromagus",fam:"Pyromagus",kl:"Magier",el:"feuer",miasma:false,flug:true,icon:"🔮"},
+  {n:"Eis-Pyromagus",fam:"Pyromagus",kl:"Magier",el:"eis",miasma:false,flug:true,icon:"🔮"},
+  {n:"Elektro-Pyromagus",fam:"Pyromagus",kl:"Magier",el:"elektro",miasma:false,flug:true,icon:"🔮"},
+  {n:"Schleim",fam:"Schleim",kl:"Bestie",el:"normal",miasma:true,flug:false,icon:"🟢"},
+  {n:"Flederbeißer",fam:"Flederbeißer",kl:"Bestie",el:"normal",miasma:true,flug:true,icon:"🦇"},
+  {n:"Gibdo",fam:"Gibdo-Familie",kl:"Bestie",el:"normal",miasma:true,flug:false,icon:"🧟"},
+  {n:"Phantom-Ganon",fam:"Mini-Bosse",kl:"Dämon",el:"normal",miasma:true,flug:false,icon:"👻"},
+  {n:"Flammen-Griock",fam:"Griock",kl:"Drache",el:"feuer",miasma:false,flug:true,icon:"🐲"},
+  {n:"Frost-Griock",fam:"Griock",kl:"Drache",el:"eis",miasma:false,flug:true,icon:"🐲"},
+  {n:"Verheerung Ganon",fam:"Endbosse",kl:"Dämon",el:"normal",miasma:false,flug:false,icon:"👿"},
+  {n:"Dämonenkönig Ganondorf",fam:"Endbosse",kl:"Dämon",el:"normal",miasma:true,flug:false,icon:"🧿"},
+];
+
+const EL_COLORS = {normal:'#8a7a5a',feuer:'#c0392b',eis:'#2980b9',elektro:'#f39c12'};
+const EL_BG = {normal:'rgba(138,122,90,0.15)',feuer:'rgba(192,57,43,0.15)',eis:'rgba(41,128,185,0.15)',elektro:'rgba(243,156,18,0.15)'};
+const KL_COLORS = {Bestie:'#5a7a3a',Magier:'#8a3a9a',Antik:'#8a7a2a',Untot:'#5a6a7a',Dämon:'#8a2a2a',Drache:'#3a6a8a',Naturwesen:'#3a8a4a'};
+const R_ACCENT = {bronze:'#cd8b4a',silber:'#aaccdd',gold:'#e8c96e',legendaer:'#d46ad4'};
+const ART_BG = {Bestie:'🐗',Magier:'🔮',Antik:'⚙️',Untot:'💀',Dämon:'👿',Drache:'🐉',Naturwesen:'🌿'};
+
+// ══════════════════════════════════════════════════════════════
+// DESIGNER STATE
+// ══════════════════════════════════════════════════════════════
+let state = {
+  name:'Roter Bokblin', familie:'Bokblin-Familie',
+  klasse:'Bestie', element:'normal', miasma:true, flug:false,
+  rarity:'bronze',
+  staerke:45, verteidigung:30, geschw:55, intel:20,
+  text:'', artUrl:null, icon:'🗡️'
+};
+let deck = JSON.parse(localStorage.getItem('mc_deck')||'[]');
+
+// ══════════════════════════════════════════════════════════════
+// MODE SWITCHING
+// ══════════════════════════════════════════════════════════════
+function switchMode(mode) {
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  if (mode === 'designer') {
+    document.querySelector('.mode-btn:nth-child(1)').classList.add('active');
+    document.getElementById('designer-mode').style.display = 'flex';
+    document.getElementById('game-mode').classList.remove('active');
+  } else {
+    document.querySelector('.mode-btn:nth-child(2)').classList.add('active');
+    document.getElementById('designer-mode').style.display = 'none';
+    document.getElementById('game-mode').classList.add('active');
+    checkDeckForGame();
+  }
+}
+
+function checkDeckForGame() {
+  if (deck.length < 10) {
+    showStatus('Du brauchst mindestens 10 Karten in deinem Deck!', 'error');
+    document.getElementById('connect-screen').querySelector('.connect-options').style.opacity = '0.5';
+    document.getElementById('connect-screen').querySelector('.connect-options').style.pointerEvents = 'none';
+  } else {
+    document.getElementById('connect-screen').querySelector('.connect-options').style.opacity = '1';
+    document.getElementById('connect-screen').querySelector('.connect-options').style.pointerEvents = 'auto';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// DESIGNER FUNCTIONS
+// ══════════════════════════════════════════════════════════════
+function filterMobs(q) {
+  const dd = document.getElementById('mob-dropdown');
+  if (!q) { dd.classList.remove('open'); return; }
+  const lower = q.toLowerCase();
+  const hits = MOBS.filter(m => m.n.toLowerCase().includes(lower)).slice(0,12);
+  if (!hits.length) { dd.classList.remove('open'); return; }
+  dd.innerHTML = hits.map(m => `
+    <div class="mob-item" onclick="loadMob('${m.n.replace(/'/g,"\\'")}')">
+      <span class="mob-item-name">${m.icon} ${m.n}</span>
+      <span class="mob-item-tags">
+        <span class="mini-tag" style="color:${KL_COLORS[m.kl]||'#888'};border-color:${KL_COLORS[m.kl]||'#444'};background:${KL_COLORS[m.kl]||'#333'}22">${m.kl}</span>
+      </span>
+    </div>
+  `).join('');
+  dd.classList.add('open');
+}
+
+function loadMob(name) {
+  const mob = MOBS.find(m => m.n === name);
+  if (!mob) return;
+  state.name = mob.n;
+  state.familie = mob.fam;
+  state.klasse = mob.kl;
+  state.element = mob.el;
+  state.miasma = mob.miasma;
+  state.flug = mob.flug;
+  state.icon = mob.icon;
+
+  document.getElementById('f-name').value = mob.n;
+  document.getElementById('f-familie').value = mob.fam;
+  document.getElementById('f-klasse').value = mob.kl;
+  document.getElementById('f-element').value = mob.el;
+  document.getElementById('f-miasma').checked = mob.miasma;
+  document.getElementById('f-flug').checked = mob.flug;
+  document.getElementById('mob-search').value = mob.n;
+  document.getElementById('mob-dropdown').classList.remove('open');
+
+  const tier = getTier(mob);
+  document.getElementById('s-staerke').value = tier.staerke;
+  document.getElementById('s-verteidigung').value = tier.verteidigung;
+  document.getElementById('s-geschw').value = tier.geschw;
+  document.getElementById('s-intel').value = tier.intel;
+
+  document.querySelectorAll('.r-btn').forEach(b => b.classList.toggle('active', b.dataset.r === tier.rarity));
+  sync();
+}
+
+function getTier(mob) {
+  const fam = mob.fam;
+  if (fam === 'Endbosse') return {staerke:95,verteidigung:90,geschw:70,intel:85,rarity:'legendaer'};
+  if (fam === 'Griock') return {staerke:88,verteidigung:82,geschw:78,intel:80,rarity:'legendaer'};
+  if (fam === 'Mini-Bosse') return {staerke:72,verteidigung:65,geschw:60,intel:65,rarity:'gold'};
+  if (fam === 'Pyromagus') return {staerke:60,verteidigung:55,geschw:70,intel:80,rarity:'gold'};
+  if (fam === 'Hinox-Familie') return {staerke:75,verteidigung:70,geschw:30,intel:20,rarity:'silber'};
+  if (mob.kl === 'Untot') return {staerke:48,verteidigung:40,geschw:35,intel:15,rarity:'silber'};
+  const name = mob.n.toLowerCase();
+  if (name.includes('golden')) return {staerke:65,verteidigung:60,geschw:60,intel:40,rarity:'gold'};
+  if (name.includes('silber')) return {staerke:55,verteidigung:52,geschw:55,intel:30,rarity:'silber'};
+  if (name.includes('schwarz')) return {staerke:50,verteidigung:45,geschw:50,intel:25,rarity:'silber'};
+  if (name.includes('blau')) return {staerke:42,verteidigung:38,geschw:45,intel:20,rarity:'bronze'};
+  return {staerke:35,verteidigung:28,geschw:40,intel:15,rarity:'bronze'};
+}
+
+function setR(btn) {
+  document.querySelectorAll('.r-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  state.rarity = btn.dataset.r;
+  renderCard();
+}
+
+function sync() {
+  state.name = document.getElementById('f-name').value || 'Mob';
+  state.familie = document.getElementById('f-familie').value;
+  state.klasse = document.getElementById('f-klasse').value;
+  state.element = document.getElementById('f-element').value;
+  state.miasma = document.getElementById('f-miasma').checked;
+  state.flug = document.getElementById('f-flug').checked;
+  state.staerke = document.getElementById('s-staerke').value;
+  state.verteidigung = document.getElementById('s-verteidigung').value;
+  state.geschw = document.getElementById('s-geschw').value;
+  state.intel = document.getElementById('s-intel').value;
+  state.text = document.getElementById('f-text').value;
+  const activeR = document.querySelector('.r-btn.active');
+  if (activeR) state.rarity = activeR.dataset.r;
+  renderCard();
+}
+
+function renderCard() {
+  const card = document.getElementById('the-card');
+  card.dataset.r = state.rarity;
+
+  document.getElementById('p-name').textContent = state.name;
+  document.getElementById('p-sub').textContent = state.familie || state.klasse;
+  document.getElementById('p-sub').style.color = R_ACCENT[state.rarity];
+  document.getElementById('p-staerke').textContent = state.staerke;
+  document.getElementById('p-verteid').textContent = state.verteidigung;
+  document.getElementById('p-geschw').textContent = state.geschw;
+  document.getElementById('p-intel').textContent = state.intel;
+  document.getElementById('p-text').textContent = state.text || 'Ein Bewohner der Wildnis.';
+
+  const badges = document.getElementById('p-badges');
+  badges.innerHTML = '';
+  if (state.miasma) badges.innerHTML += `<div class="badge">☠</div>`;
+  if (state.flug) badges.innerHTML += `<div class="badge">🦅</div>`;
+
+  const tags = document.getElementById('p-tags');
+  const elColor = EL_COLORS[state.element];
+  const elBg = EL_BG[state.element];
+  const klColor = KL_COLORS[state.klasse] || '#888';
+  tags.innerHTML = `
+    <span class="card-tag" style="color:${klColor};border-color:${klColor};background:${klColor}22">${state.klasse}</span>
+    ${state.element !== 'normal' ? `<span class="card-tag" style="color:${elColor};border-color:${elColor};background:${elBg}">${state.element.charAt(0).toUpperCase()+state.element.slice(1)}</span>` : ''}
+  `;
+
+  const artEl = document.getElementById('p-art');
+  if (state.artUrl) {
+    artEl.innerHTML = `<img src="${state.artUrl}">`;
+  } else {
+    const bg = EL_BG[state.element] || 'rgba(100,80,40,0.3)';
+    artEl.style.background = `linear-gradient(135deg, ${bg.replace('0.15','0.4')}, rgba(0,0,0,0.8))`;
+    artEl.innerHTML = state.icon || ART_BG[state.klasse] || '❓';
+  }
+}
+
+function loadArt(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    state.artUrl = ev.target.result;
+    document.getElementById('art-hint').style.display = 'none';
+    const img = document.getElementById('art-prev');
+    img.src = ev.target.result; img.style.display = 'block';
+    renderCard();
+  };
+  r.readAsDataURL(file);
+}
+
+function saveCard() {
+  deck.push({...state, id: Date.now()});
+  localStorage.setItem('mc_deck', JSON.stringify(deck));
+  renderGallery();
+}
+
+function renderGallery() {
+  const g = document.getElementById('g-grid');
+  document.getElementById('g-cnt').textContent = deck.length + ' Karten';
+  if (!deck.length) {
+    g.innerHTML = '<div class="gallery-empty">Noch keine Karten.<br>Speichere deine erste!</div>';
+    return;
+  }
+  g.innerHTML = deck.map((c,i) => {
+    const bg = `background: linear-gradient(165deg,${EL_BG[c.element]||'rgba(100,80,40,0.5)'},rgba(0,0,0,0.85))`;
+    const border = `border-color:${R_ACCENT[c.rarity]||'#666'}`;
+    return `
+    <div class="g-card" onclick="loadFromGallery(${i})">
+      <div class="g-mini" style="${bg};${border}">
+        ${c.artUrl ? `<img src="${c.artUrl}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.6">` : ''}
+        <span class="g-mini-icon">${c.icon||'❓'}</span>
+        <span class="g-mini-name">${c.name}</span>
+      </div>
+      <button class="g-del" onclick="delCard(event,${i})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function loadFromGallery(i) {
+  const c = deck[i];
+  state = {...c};
+  document.getElementById('f-name').value = c.name;
+  document.getElementById('f-familie').value = c.familie||'';
+  document.getElementById('f-klasse').value = c.klasse;
+  document.getElementById('f-element').value = c.element;
+  document.getElementById('f-miasma').checked = c.miasma;
+  document.getElementById('f-flug').checked = c.flug;
+  document.getElementById('s-staerke').value = c.staerke;
+  document.getElementById('s-verteidigung').value = c.verteidigung;
+  document.getElementById('s-geschw').value = c.geschw;
+  document.getElementById('s-intel').value = c.intel;
+  document.getElementById('f-text').value = c.text||'';
+  document.querySelectorAll('.r-btn').forEach(b => b.classList.toggle('active', b.dataset.r === c.rarity));
+  if (c.artUrl) {
+    const img = document.getElementById('art-prev');
+    img.src = c.artUrl; img.style.display = 'block';
+    document.getElementById('art-hint').style.display = 'none';
+  }
+  renderCard();
+}
+
+function delCard(e, i) {
+  e.stopPropagation();
+  deck.splice(i,1);
+  localStorage.setItem('mc_deck', JSON.stringify(deck));
+  renderGallery();
+}
+
+function exportDeck() {
+  const clean = deck.map(({artUrl,...rest}) => rest);
+  const blob = new Blob([JSON.stringify(clean,null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'molestus-cardus-deck.json';
+  a.click();
+}
+
+function generateRandomDeck() {
+  if (deck.length > 0) {
+    if (!confirm('Dies löscht dein aktuelles Deck. Fortfahren?')) return;
+    deck = [];
+  }
+  
+  // Shuffle MOBS and take 20 random ones
+  const shuffled = [...MOBS].sort(() => Math.random() - 0.5);
+  const selected = shuffled.slice(0, 20);
+  
+  selected.forEach(mob => {
+    const tier = getTier(mob);
+    const card = {
+      id: Date.now() + Math.random(),
+      name: mob.n,
+      familie: mob.fam,
+      klasse: mob.kl,
+      element: mob.el,
+      miasma: mob.miasma,
+      flug: mob.flug,
+      icon: mob.icon,
+      rarity: tier.rarity,
+      staerke: tier.staerke,
+      verteidigung: tier.verteidigung,
+      geschw: tier.geschw,
+      intel: tier.intel,
+      text: '',
+      artUrl: null
+    };
+    deck.push(card);
+  });
+  
+  localStorage.setItem('mc_deck', JSON.stringify(deck));
+  renderGallery();
+  
+  // Show success message
+  const g = document.getElementById('g-grid');
+  const msg = document.createElement('div');
+  msg.style.cssText = 'grid-column:span 2;text-align:center;padding:20px;color:var(--gold);font-size:14px;';
+  msg.textContent = '✓ 20 Zufallskarten erstellt!';
+  g.insertBefore(msg, g.firstChild);
+  setTimeout(() => msg.remove(), 3000);
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.mob-search'))
+    document.getElementById('mob-dropdown').classList.remove('open');
+});
+
+// ══════════════════════════════════════════════════════════════
+// MULTIPLAYER GAME
+// ══════════════════════════════════════════════════════════════
+let peer = null;
+let conn = null;
+let isHost = false;
+let myPeerId = null;
+let gameState = {
+  myDeck: [],
+  oppDeck: [],
+  myCard: null,
+  oppCard: null,
+  myTurn: false,
+  selectedStat: null
+};
+
+function hostGame() {
+  if (deck.length < 10) return;
+  
+  showStatus('Erstelle Raum...', 'waiting');
+  
+  peer = new Peer({
+    config: {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' }
+      ]
+    }
+  });
+  
+  peer.on('open', id => {
+    myPeerId = id;
+    console.log('My peer ID:', id);
+    document.getElementById('room-code').textContent = id;
+    document.getElementById('room-code-box').classList.remove('hidden');
+    document.querySelector('.connect-options').style.display = 'none';
+    showStatus('Warte auf Mitspieler...', 'waiting');
+    isHost = true;
+  });
+
+  peer.on('connection', c => {
+    console.log('Incoming connection from:', c.peer);
+    conn = c;
+    setupConnection();
+    showStatus('Verbunden! Starte Spiel...', 'connected');
+    setTimeout(startGame, 1500);
+  });
+
+  peer.on('error', err => {
+    console.error('Peer error:', err);
+    showStatus('Fehler beim Erstellen: ' + err.type, 'error');
+  });
+}
+
+function joinGame() {
+  const code = document.getElementById('join-input').value.trim();
+  if (!code || deck.length < 10) return;
+  
+  showStatus('Verbinde mit ' + code + '...', 'waiting');
+  
+  peer = new Peer({
+    config: {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' }
+      ]
+    }
+  });
+  
+  peer.on('open', myId => {
+    myPeerId = myId;
+    console.log('My peer ID:', myId);
+    console.log('Connecting to:', code);
+    
+    conn = peer.connect(code, {
+      reliable: true
+    });
+    
+    conn.on('open', () => {
+      console.log('Connection opened!');
+      showStatus('Verbunden! Warte auf Spielstart...', 'connected');
+    });
+    
+    setupConnection();
+  });
+
+  peer.on('error', err => {
+    console.error('Peer error:', err);
+    showStatus('Verbindung fehlgeschlagen: ' + err.type + ' - Code richtig?', 'error');
+  });
+}
+
+function setupConnection() {
+  conn.on('open', () => {
+    showStatus('Verbunden!', 'connected');
+    if (!isHost) {
+      setTimeout(() => {
+        conn.send({type: 'ready'});
+      }, 500);
+    }
+  });
+
+  conn.on('data', data => {
+    handleMessage(data);
+  });
+
+  conn.on('close', () => {
+    showStatus('Verbindung verloren!', 'error');
+  });
+}
+
+function handleMessage(msg) {
+  console.log('Received message:', msg.type, msg);
+  
+  if (msg.type === 'ready' && isHost) {
+    startGame();
+  } else if (msg.type === 'start') {
+    // Joiner receives their deck from host
+    gameState.myDeck = msg.yourDeck;
+    gameState.oppDeck = msg.oppDeckSize;
+    gameState.myTurn = msg.yourTurn;
+    console.log('Game started! My cards:', gameState.myDeck.length, 'Opp cards:', gameState.oppDeck, 'My turn:', gameState.myTurn);
+    showGameBoard();
+  } else if (msg.type === 'show_card') {
+    gameState.oppCard = msg.card;
+    console.log('Got opponent card:', msg.card.name);
+    renderBattle();
+    tryShowSelector();
+  } else if (msg.type === 'stat_selected') {
+    console.log('Opponent selected stat:', msg.stat);
+    gameState.selectedStat = msg.stat;
+    // Reveal the cards. The selector (other player) will send round_result.
+    renderBattle();
+  } else if (msg.type === 'round_result') {
+    console.log('Got round result:', msg);
+    applyRoundResult(msg);
+  }
+}
+
+function startGame() {
+  // Only HOST shuffles and splits the deck
+  const shuffled = [...deck].sort(() => Math.random() - 0.5);
+  const half = Math.floor(shuffled.length / 2);
+  
+  if (isHost) {
+    // Host keeps first half
+    gameState.myDeck = shuffled.slice(0, half);
+    const joinerDeck = shuffled.slice(half);
+    gameState.oppDeck = joinerDeck.length;
+    gameState.myTurn = true; // Host starts
+    
+    // Send joiner their deck
+    conn.send({
+      type: 'start',
+      yourDeck: joinerDeck,
+      oppDeckSize: gameState.myDeck.length,
+      yourTurn: false
+    });
+    
+    showGameBoard();
+  }
+  // Joiner waits for 'start' message with their deck
+}
+
+function showGameBoard() {
+  document.getElementById('connect-screen').style.display = 'none';
+  document.getElementById('game-board').classList.add('active');
+  updateCounts();
+  nextRound();
+}
+
+function updateCounts() {
+  document.getElementById('p1-count').textContent = gameState.myDeck.length + ' Karten';
+  document.getElementById('p2-count').textContent = gameState.oppDeck + ' Karten';
+  
+  if (gameState.myTurn) {
+    document.getElementById('turn-indicator').textContent = '⚔️ DEIN ZUG';
+  } else {
+    document.getElementById('turn-indicator').textContent = 'Gegner wählt...';
+  }
+}
+
+function nextRound() {
+  console.log('nextRound called. My cards:', gameState.myDeck.length, 'My turn:', gameState.myTurn);
+  document.getElementById('result-overlay').classList.remove('active');
+
+  if (gameState.myDeck.length === 0) {
+    endGame(false);
+    return;
+  }
+  if (gameState.oppDeck === 0) {
+    endGame(true);
+    return;
+  }
+
+  // Set my card. oppCard may already have arrived from opponent — keep it.
+  gameState.myCard = gameState.myDeck[0];
+  gameState.selectedStat = null;
+
+  updateCounts();
+  renderBattle();
+
+  console.log('Sending my card:', gameState.myCard.name);
+  conn.send({
+    type: 'show_card',
+    card: gameState.myCard
+  });
+
+  // If opponent's card already arrived, we can proceed
+  tryShowSelector();
+}
+
+function tryShowSelector() {
+  if (gameState.myTurn && !gameState.selectedStat && gameState.myCard && gameState.oppCard) {
+    setTimeout(() => showStatSelector(), 300);
+  }
+}
+
+function renderBattle() {
+  // My card - always visible
+  document.getElementById('p1-card-slot').innerHTML = renderGameCard(gameState.myCard);
+  
+  // Opponent card - hidden until stat is selected
+  if (gameState.oppCard && gameState.selectedStat) {
+    // Stat selected - show full card
+    document.getElementById('p2-card-slot').innerHTML = renderGameCard(gameState.oppCard);
+  } else if (gameState.oppCard) {
+    // Card exists but stat not selected yet - show card back
+    document.getElementById('p2-card-slot').innerHTML = renderCardBack();
+  } else {
+    // Waiting for opponent to send card
+    document.getElementById('p2-card-slot').innerHTML = '<div style="font-size:80px;opacity:0.3;">🃏</div>';
+  }
+}
+
+function renderCardBack() {
+  return `
+    <div class="card" style="transform:none;filter:drop-shadow(0 12px 30px rgba(0,0,0,0.8))">
+      <div class="card-bg" style="background:linear-gradient(165deg,#1a1200,#0a0600);border-color:var(--gold3)"></div>
+      <div class="corner tl" style="border-color:var(--gold)"></div>
+      <div class="corner tr" style="border-color:var(--gold)"></div>
+      <div class="corner bl" style="border-color:var(--gold)"></div>
+      <div class="corner br" style="border-color:var(--gold)"></div>
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px">
+        <div style="font-size:80px;opacity:0.3;">△</div>
+        <div style="font-family:'Cinzel',serif;font-size:12px;color:var(--gold);opacity:0.5;letter-spacing:3px">MOLESTUS<br>CARDUS</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderGameCard(card) {
+  if (!card) return '';
+  const bg = `linear-gradient(165deg,${EL_BG[card.element]||'rgba(100,80,40,0.5)'},rgba(0,0,0,0.85))`;
+  const borderColor = R_ACCENT[card.rarity] || '#666';
+  
+  return `
+    <div class="card" data-r="${card.rarity}" style="transform:none;filter:drop-shadow(0 12px 30px rgba(0,0,0,0.8))">
+      <div class="card-bg" style="background:${bg};border-color:${borderColor}"></div>
+      <div class="card-glow"></div>
+      <div class="corner tl" style="border-color:${borderColor}"></div>
+      <div class="corner tr" style="border-color:${borderColor}"></div>
+      <div class="corner bl" style="border-color:${borderColor}"></div>
+      <div class="corner br" style="border-color:${borderColor}"></div>
+      <div class="card-badges">
+        ${card.miasma ? '<div class="badge">☠</div>' : ''}
+        ${card.flug ? '<div class="badge">🦅</div>' : ''}
+      </div>
+      <div class="card-art">
+        <div class="card-art-inner" style="background:linear-gradient(135deg,${EL_BG[card.element]?.replace('0.15','0.4')},rgba(0,0,0,0.8))">
+          ${card.artUrl ? `<img src="${card.artUrl}">` : (card.icon || '❓')}
+        </div>
+      </div>
+      <div class="card-rarity-line" style="background:linear-gradient(90deg,transparent,${borderColor},transparent)"></div>
+      <div class="card-namebox">
+        <div class="card-name">${card.name}</div>
+        <div class="card-sub" style="color:${borderColor}">${card.familie || card.klasse}</div>
+      </div>
+      <div class="card-stats">
+        <div class="card-stat"><div class="cs-lbl">Stärke</div><div class="cs-val">${card.staerke}</div></div>
+        <div class="card-stat"><div class="cs-lbl">Verteid.</div><div class="cs-val">${card.verteidigung}</div></div>
+        <div class="card-stat"><div class="cs-lbl">Geschw.</div><div class="cs-val">${card.geschw}</div></div>
+        <div class="card-stat"><div class="cs-lbl">Intel.</div><div class="cs-val">${card.intel}</div></div>
+      </div>
+      <div class="card-footer">
+        <div class="card-gem" style="background:${borderColor}"></div>
+        <div class="card-setname">MOLESTUS CARDUS</div>
+        <div class="card-gem" style="background:${borderColor}"></div>
+      </div>
+    </div>
+  `;
+}
+
+function showStatSelector() {
+  const sel = document.getElementById('stat-selector');
+  sel.style.display = 'flex';
+  document.getElementById('sel-staerke').textContent = gameState.myCard.staerke;
+  document.getElementById('sel-verteid').textContent = gameState.myCard.verteidigung;
+  document.getElementById('sel-geschw').textContent = gameState.myCard.geschw;
+  document.getElementById('sel-intel').textContent = gameState.myCard.intel;
+}
+
+function selectStat(stat) {
+  gameState.selectedStat = stat;
+  document.getElementById('stat-selector').style.display = 'none';
+  
+  // Reveal opponent's card
+  renderBattle();
+  
+  conn.send({
+    type: 'stat_selected',
+    stat: stat
+  });
+  
+  // Small delay before showing result
+  setTimeout(() => {
+    resolveRound();
+  }, 1000);
+}
+
+function resolveRound() {
+  if (!gameState.selectedStat || !gameState.oppCard) {
+    console.log('Cannot resolve - missing data. Stat:', gameState.selectedStat, 'OppCard:', !!gameState.oppCard);
+    return;
+  }
+
+  const stat = gameState.selectedStat;
+  const myVal = parseInt(gameState.myCard[stat]);
+  const oppVal = parseInt(gameState.oppCard[stat]);
+
+  let winner;
+  if (myVal > oppVal) {
+    winner = 'me';
+  } else if (oppVal > myVal) {
+    winner = 'opp';
+  } else {
+    winner = 'tie';
+  }
+
+  console.log(`Resolving: ${stat} - My:${myVal} vs Opp:${oppVal} = Winner:${winner}`);
+
+  // Send result to opponent (with flipped winner)
+  const resultToSend = {
+    type: 'round_result',
+    winner: winner === 'me' ? 'opp' : winner === 'opp' ? 'me' : 'tie',
+    stat: stat
+  };
+  conn.send(resultToSend);
+
+  // Apply result locally
+  applyRoundResult({
+    winner: winner,
+    stat: stat
+  });
+}
+
+function applyRoundResult(result) {
+  console.log('Applying result:', result);
+  
+  const statNames = {
+    staerke: 'Stärke',
+    verteidigung: 'Verteidigung',
+    geschw: 'Geschwindigkeit',
+    intel: 'Intelligenz'
+  };
+
+  const myVal = gameState.myCard[result.stat];
+  const oppVal = gameState.oppCard[result.stat];
+
+  let title, text;
+  if (result.winner === 'me') {
+    title = '🎉 Du gewinnst!';
+    text = `${statNames[result.stat]}: ${myVal} > ${oppVal}`;
+    // I win both cards
+    gameState.myDeck.push(gameState.myDeck.shift()); // Move my card to back
+    gameState.myDeck.push(gameState.oppCard); // Add opponent's card
+    gameState.oppDeck--; // Opponent loses a card
+    gameState.myTurn = true;
+  } else if (result.winner === 'opp') {
+    title = '😢 Gegner gewinnt';
+    text = `${statNames[result.stat]}: ${oppVal} > ${myVal}`;
+    // Opponent wins both cards
+    gameState.myDeck.shift(); // I lose my card
+    gameState.oppDeck++; // Opponent gains a card (mine)
+    gameState.myTurn = false;
+  } else {
+    title = '🤝 Unentschieden';
+    text = `${statNames[result.stat]}: ${myVal} = ${oppVal}`;
+    // Both keep their cards, move to back
+    gameState.myDeck.push(gameState.myDeck.shift());
+    // Opponent deck count stays same
+  }
+
+  console.log('Result applied. My cards now:', gameState.myDeck.length, 'Opp cards:', gameState.oppDeck, 'My turn:', gameState.myTurn);
+
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('result-text').textContent = text;
+  document.getElementById('result-overlay').classList.add('active');
+
+  // Clear round state so the next show_card from opponent isn't dropped
+  gameState.myCard = null;
+  gameState.oppCard = null;
+  gameState.selectedStat = null;
+
+  updateCounts();
+}
+
+function endGame(won) {
+  document.getElementById('game-board').classList.remove('active');
+  document.getElementById('game-over').classList.add('active');
+  document.getElementById('winner-text').textContent = won ? '🏆 DU HAST GEWONNEN!' : '😢 Du hast verloren';
+}
+
+function showStatus(msg, type) {
+  const el = document.getElementById('status-msg');
+  el.textContent = msg;
+  el.className = 'status-msg ' + type;
+  el.style.display = 'block';
+}
+
+function copyRoomCode() {
+  const code = document.getElementById('room-code').textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    showStatus('✓ Code kopiert!', 'connected');
+    setTimeout(() => {
+      showStatus('Warte auf Mitspieler...', 'waiting');
+    }, 2000);
+  }).catch(err => {
+    console.error('Failed to copy:', err);
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════
+renderCard();
+renderGallery();
+</script>
+</body>
+</html>
